@@ -1,0 +1,38 @@
+name: Render wallpaper
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # daily, 3 AM Eastern (4 AM during daylight time)
+  workflow_dispatch:       # "Run workflow" button for manual refreshes
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}current.png
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python render.py --out site/current.png
+      - run: echo '<meta http-equiv="refresh" content="0; url=current.png">' > site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
