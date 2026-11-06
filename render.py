@@ -42,8 +42,8 @@ DEFAULT_DEVICE = "iphone-16"
 
 # ---- Base canvas (layout units) ----
 W, H = 1290, 2796
-TOP_CLEAR = 880       # lock-screen clock + widgets live above this
-BOTTOM_CLEAR = 260    # flashlight / camera buttons live below H - this
+TOP_CLEAR = 720       # lock-screen clock lives above this (no widgets row)
+BOTTOM_CLEAR = 420    # keeps the content block the same height; extra room above flashlight
 SIDE = 70
 CX = W // 2
 
