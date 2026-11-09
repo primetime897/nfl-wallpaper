@@ -2,13 +2,15 @@ name: Render wallpaper
 
 on:
   schedule:
-    - cron: "0 8 * * *"   # daily, 3 AM Eastern (4 AM during daylight time)
+    # Hourly at an off-peak minute. GitHub's scheduler often runs jobs hours
+    # late or skips them, so frequent runs keep the image fresh regardless.
+    - cron: "23 * * * *"
   workflow_dispatch:       # "Run workflow" button for manual refreshes
   push:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write      # only for the keep-alive commit below
   pages: write
   id-token: write
 
@@ -24,6 +26,17 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}current.png
     steps:
       - uses: actions/checkout@v4
+      # GitHub disables scheduled jobs after 60 days with no commits.
+      # An empty commit every 45 quiet days keeps the schedule alive.
+      - name: Keep schedule alive
+        run: |
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 45 * 86400 )) ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Keep scheduled wallpaper job alive"
+            git push
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
